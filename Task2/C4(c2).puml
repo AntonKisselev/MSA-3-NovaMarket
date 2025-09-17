@@ -1,0 +1,46 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(user, "Покупатель")
+Person(seller, "Продавец")
+
+System_Boundary(novamarket, "Nova Market System") {
+    Container(api_gateway, "API шлюз")
+    Container(catalog, "Каталог товаров")
+    Container(store, "Складской учет")
+    Container(order, "Корзина и оформление заказа")
+    Rel(order, store, "Проверка наличия товара")
+    Container(payment, "Платежный шлюз")
+    Rel(order, payment, "Проведение оплаты")
+    Container(delivery, "Служба доставки")
+
+    Container(orders_list, "Заказы")
+    Rel(orders_list, catalog, "Информация о товарах")
+
+    ContainerDb(EDA_storage, "EDA хранилище", "Kafka")
+    Rel(payment, EDA_storage, "Оплата заказа", "топик order", "order_payed")
+    Rel(EDA_storage, store, "Резервирование заказа", "топик order", "order_payed")
+    Rel(store, EDA_storage, "Товар зарезервирован для доставки", "топик delivery", "delivery")
+    Rel(EDA_storage, delivery, "Оформление доставки", "топик delivery", "delivery")
+    Rel(delivery, EDA_storage, "Изменение статуса доставки", "топик delivery")
+    Rel(EDA_storage, orders_list, "Отправка данных о заказах", топик order")
+    Rel(EDA_storage, orders_list, "Отправка данных о доставке", топик delivery")
+    Rel(order, EDA_storage, "Отправка данных о изменениях заказов", топик order")
+
+    Container(api_gateway_seller, "API шлюз продавца")
+}
+
+Rel(user, api_gateway, "Взаимодействует")
+Rel(api_gateway, catalog, "Получает карточки каталога")
+Rel(api_gateway, store, "Получает количества товаров")
+Rel(api_gateway, order, "Оформление заказа")
+Rel(api_gateway, delivery, "получение статуса доставки")
+Rel(api_gateway, orders_list, "получение списка заказов")
+
+Rel(seller, api_gateway_seller, "Взаимодействует")
+Rel(api_gateway_seller, catalog, "Публикует новые товары и цены")
+Rel(api_gateway_seller, store, "Вносит информацию об остатках")
+Rel(api_gateway_seller, delivery, "Получает информацию о статусе доставки")
+@enduml

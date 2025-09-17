@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: novamarket-servicemonitor
+  namespace: default
+  labels:
+    release: prometheus-operator
+spec:
+  selector:
+    matchLabels:
+      app: novamarket
+  namespaceSelector:
+    matchNames:
+      - default
+  endpoints:
+    - port: http-api
+      interval: 30s
+      path: /metrics
+      scheme: http
